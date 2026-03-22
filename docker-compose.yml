@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  lab_assistant:
+    build: .
+    container_name: lab_assistant_arm
+    restart: unless-stopped
+
+    # Critical Hardware Passthrough: Raspberry Pi Audio relies on mapping ALSA to the host
+    devices:
+      - /dev/snd:/dev/snd
+
+    # Allow it to run in terminal interactivly so the STDIN feature works
+    stdin_open: true
+    tty: true
+
+    # Inject your OpenAI API key from the local environment into the container
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+    # Volume map the PDF directory so they don't have to rebuild the container to add files
+    volumes:
+      - ./data:/app/data

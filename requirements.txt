@@ -1,0 +1,9 @@
+pyaudio
+openai
+ddgs
+pygame
+SpeechRecognition
+soundfile
+pypdf
+python-dotenv
+numpy
