@@ -1,13 +1,17 @@
 import os
 import warnings
 from openai import OpenAI
-from duckduckgo_search import DDGS
+
+# Filter the annoying DDGS package rename warning BEFORE loading the module
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    try:
+        from ddgs import DDGS
+    except ImportError:
+        from duckduckgo_search import DDGS
 from rich.console import Console
 
 console = Console()
-
-# Filter annoying DDGS package rename warning
-warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
 
 # Assumes OPENAI_API_KEY is set in the environment
 client = OpenAI()
