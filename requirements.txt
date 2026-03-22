@@ -7,3 +7,4 @@ soundfile
 pypdf
 python-dotenv
 numpy
+rich

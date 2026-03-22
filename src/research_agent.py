@@ -2,6 +2,9 @@ import os
 import warnings
 from openai import OpenAI
 from duckduckgo_search import DDGS
+from rich.console import Console
+
+console = Console()
 
 # Filter annoying DDGS package rename warning
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
@@ -10,7 +13,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_se
 client = OpenAI()
 
 def transcribe_audio(audio_path):
-    print("Transcribing audio via Whisper API...", flush=True)
+    console.print("[dim]Transcribing audio via Whisper API...[/dim]")
     try:
         with open(audio_path, "rb") as audio_file:
             transcription = client.audio.transcriptions.create(
@@ -18,14 +21,14 @@ def transcribe_audio(audio_path):
                 file=audio_file,
                 language="en"
             )
-        print(f"User Query: \"{transcription.text}\"", flush=True)
+        console.print(f"👤  [bold blue]User Query:[/bold blue] \"{transcription.text}\"")
         return transcription.text
     except Exception as e:
-        print(f"Transcription failed: {e}", flush=True)
+        console.print(f"[bold red]Transcription failed: {e}[/bold red]")
         return ""
 
 def perform_web_search(query):
-    print("Searching the web for current data...", flush=True)
+    console.print("[dim]Searching the web via DuckDuckGo...[/dim]")
     try:
         results = DDGS().text(query, max_results=3)
         context = ""
@@ -35,11 +38,11 @@ def perform_web_search(query):
             count += 1
         return context
     except Exception as e:
-        print(f"Search failed: {e}", flush=True)
+        console.print(f"[red]Search failed: {e}[/red]")
         return "No web search data available."
 
 def generate_research_summary(query, web_context, pdf_context=""):
-    print("Generating concise research summary via GPT-4o-mini...", flush=True)
+    console.print("[dim]Generating concise research summary via GPT-4o-mini...[/dim]")
     system_prompt = (
         "You are an extremely helpful and concise AI voice assistant running in a lab. "
         "The user will ask you a question aloud. You are provided with retrieved text from local PDFs, as well as live web search context. "
@@ -71,7 +74,7 @@ def generate_research_summary(query, web_context, pdf_context=""):
         )
         return response.choices[0].message.content
     except Exception as e:
-        print(f"GPT Generation failed: {e}", flush=True)
+        console.print(f"[bold red]GPT Generation failed: {e}[/bold red]")
         return "I encountered an error trying to generate a response."
 
 def process_query(audio_path):
