@@ -6,7 +6,7 @@ from rich.console import Console
 
 console = Console()
 
-def listen_for_wakeword(wakeword="hey slopper", trigger_event=None):
+def listen_for_wakeword(wakeword="hey assistant", trigger_event=None):
     """
     Listens continuously on the microphone until the custom wakeword is detected.
     Uses Google's free STT for quick flexible custom wake words on ARM devices.
@@ -36,8 +36,8 @@ def listen_for_wakeword(wakeword="hey slopper", trigger_event=None):
                 # Use generalized free google transcription to catch the wake word
                 text = r.recognize_google(audio).lower()
                 
-                # Check if 'slopper' or 'hey slopper' is in the text
-                if "slopper" in text or "slapper" in text or wakeword in text:
+                # Check if 'assistant' or 'hey assistant' is in the text
+                if "assistant" in text or wakeword in text:
                     console.print(f"\n[bold magenta]🎯 Wake word heard! (Matched '{text}')[/bold magenta]")
                     return True
             except sr.WaitTimeoutError:

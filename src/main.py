@@ -32,7 +32,7 @@ def manual_input_thread_func(trigger_event):
 def run_assistant_loop():
     console.print(Panel.fit("[bold cyan]🔬 Lab Voice Assistant Started[/bold cyan]", border_style="cyan"))
     console.print("[dim]Ready and standing by.[/dim]")
-    console.print("[yellow]Say 'hey slopper' or press [ENTER] in the terminal to ask a question.[/yellow]\n")
+    console.print("[yellow]Say 'hey assistant' or press [ENTER] in the terminal to ask a question.[/yellow]\n")
     
     # Setup hotkey event
     manual_trigger = threading.Event()
@@ -44,7 +44,7 @@ def run_assistant_loop():
     while True:
         try:
             # 1. Wait for wake word OR the hotkey event
-            listen_for_wakeword("hey slopper", trigger_event=manual_trigger)
+            listen_for_wakeword("hey assistant", trigger_event=manual_trigger)
             
             # 2. Record the user's question
             audio_file = record_query("current_query.wav")
