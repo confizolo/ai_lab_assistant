@@ -1,0 +1,94 @@
+import os
+import warnings
+from openai import OpenAI
+from duckduckgo_search import DDGS
+
+# Filter annoying DDGS package rename warning
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
+
+# Assumes OPENAI_API_KEY is set in the environment
+client = OpenAI()
+
+def transcribe_audio(audio_path):
+    print("Transcribing audio via Whisper API...", flush=True)
+    try:
+        with open(audio_path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1", 
+                file=audio_file,
+                language="en"
+            )
+        print(f"User Query: \"{transcription.text}\"", flush=True)
+        return transcription.text
+    except Exception as e:
+        print(f"Transcription failed: {e}", flush=True)
+        return ""
+
+def perform_web_search(query):
+    print("Searching the web for current data...", flush=True)
+    try:
+        results = DDGS().text(query, max_results=3)
+        context = ""
+        count = 1
+        for r in results:
+            context += f"Source {count}: {r.get('title')}\nInfo: {r.get('body')}\n\n"
+            count += 1
+        return context
+    except Exception as e:
+        print(f"Search failed: {e}", flush=True)
+        return "No web search data available."
+
+def generate_research_summary(query, web_context, pdf_context=""):
+    print("Generating concise research summary via GPT-4o-mini...", flush=True)
+    system_prompt = (
+        "You are an extremely helpful and concise AI voice assistant running in a lab. "
+        "The user will ask you a question aloud. You are provided with retrieved text from local PDFs, as well as live web search context. "
+        "Summarize the direct answer using 1-4 short sentences maximum. "
+        "IMPORTANT: You MUST explicitly state your source aloud at the beginning of your answer! "
+        "If using PDF context, start with 'According to the file [filename]...'. "
+        "If using Web context, start with 'Based on a web search...'. "
+        "If both, mention both! "
+        "Do NOT use asterisks, markdown formatting, bullet points, complex code snippets, or URLs. "
+        "Use natural conversational English meant for the ear, not the eye."
+    )
+    
+    # Combine the context properly
+    combined_context = ""
+    if pdf_context:
+        combined_context += f"LOCAL PDF CONTEXT:\n{pdf_context}\n"
+    if web_context:
+        combined_context += f"WEB SEARCH CONTEXT:\n{web_context}"
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Query: {query}\n\n{combined_context}"}
+            ],
+            max_tokens=200,
+            temperature=0.4
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"GPT Generation failed: {e}", flush=True)
+        return "I encountered an error trying to generate a response."
+
+def process_query(audio_path):
+    """
+    Pipeline to transcribe, search, and generate a response.
+    """
+    text_query = transcribe_audio(audio_path)
+    if not text_query or len(text_query.strip()) < 5:
+        return "I didn't quite catch that."
+    
+    # Search local PDFs (imported dynamically to avoid circular issues)
+    from document_loader import get_relevant_pdf_context, KNOWLEDGE_BASE
+    pdf_context = get_relevant_pdf_context(text_query, KNOWLEDGE_BASE)
+    
+    # Search Web
+    web_context = perform_web_search(text_query)
+    
+    # Generate unified answer
+    answer = generate_research_summary(text_query, web_context, pdf_context)
+    return answer
