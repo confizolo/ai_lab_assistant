@@ -52,18 +52,26 @@ python3 src/main.py
 ```
 
 ### Flow of Execution:
-1.  **Wake Word:** The terminal will show it is running the `openwakeword` loop. Say **"Hey Jarvis"**.
-2.  **Listener:** The program will acknowledge the wake word and print `Listening for your query...`
-3.  **Interaction:** Ask your question aloud (e.g., *"What were the key takeaways from the most recent SpaceX launch?"*) Let silence indicate you've finished speaking.
-4.  **Processing:** It will transcribe via Whisper, Search the web, summarize via GPT, and then dynamically speak the answer out of your speakers.
+1.  **Wake Word:** The terminal will actively listen using energy limits to discard silence. Say **"Hey assistant"** (or press ENTER in the terminal manually).
+2.  **Listener:** The program will acknowledge the wake word and prompt you to start speaking. 
+3.  **Interaction:** Ask your question aloud (e.g., *"What were the key takeaways from the most recent SpaceX launch?"* or *"What does the PDF say about project deadlines?"*). Let silence indicate you've finished speaking.
+4.  **Processing:** It will transcribe via Whisper, Search the web AND your local PDF collection, summarize via GPT, and then dynamically speak the combined answer out of your speakers.
 
 ---
 
-## 🔧 Architecture & Modules
+## 💻 Tech Stack & Tools
 
-*   `audio_capture.py`: Orchestrates the `openwakeword` ONNX models and `SpeechRecognition`'s silence-detection algorithms to handle the exact recording limits of the microphone seamlessly.
-*   `research_agent.py`: Bridges the audio transcription (`whisper-1`) string directly into the DuckDuckGo Search API, and then summarizes the web-context directly via a low-latency GPT model.
-*   `audio_output.py`: Converts text directly into high-fidelity voice using `alloy` via `tts-1` model and plays back seamlessly without relying on `afplay` (MacOS specific) so the exact same repository works gracefully on a Raspberry Pi. 
-*   `main.py`: The unbreakable loop that catches errors, plays alert tones, and stitches it all together.
+This assistant utilizes a heavily optimized combination of libraries to ensure purely generalized ARM functionality without heavy compiled C-binding requirements:
 
-*(Note: openwakeword processes strictly offline on-device; only the specific question query gets sent to the cloud, saving massive bandwidth and cost!)*
+- **OpenAI APIs**: Built via `openai` python library. Uses `whisper-1` for highly accurate acoustic transcription, `gpt-4o-mini` for fast multi-context reasoning, `tts-1` (`alloy`) for conversational playback, and `text-embedding-3-small` for vectorizing local data.
+- **Microphone Capture**: Powered by `PyAudio` (binding `PortAudio`/`ALSA` streams) and `SpeechRecognition` implementing smart silence-chunking thresholds.
+- **Search (Internet)**: Live intelligence via the `duckduckgo-search` (DDGS) headless web API.
+- **Search (Local PDF Vector RAG)**: Powered completely offline using `pypdf` for fast extraction and `numpy` dot-products for memory-safe Cosine Similarity generation, specifically optimized to avoid heavy vector-databases on Raspberry Pi microchip architectures.
+- **Audio Output**: Synced entirely across OS audio drivers asynchronously utilizing `pygame`.
+- **Command Line UI**: Driven by Textualize's `rich` library to draw aesthetic panels, spinners, and colors inside standard Bash terminals.
+- **Environment Flow**: `python-dotenv` for encrypted, cross-platform local key management.
+
+---
+
+> **Built by Artificial Intelligence**  
+> *This entire application, architecture, and documentation logic was generated exclusively through **Gemini 3.1 Pro**.*
